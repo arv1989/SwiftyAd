@@ -82,6 +82,13 @@ SwiftyAd.shared.showInterstitial(from: self)
 SwiftyAd.shared.showInterstitial(from: self, withInterval: 4) // Shows an ad every 4th time method is called
 SwiftyAd.shared.showRewardedVideo(from: self) // Should be called when pressing dedicated button
 ```
+UIView
+```swift
+// Insted of self.adview , add the view on which you want to show the add
+SwiftyAd.shared.loadBannerAdforView(self.adView)  
+
+```
+
 SKScene
 (Do not call this in didMoveToView as .window property is still nil at that point. Use a delay or call it later)
 ```swift
