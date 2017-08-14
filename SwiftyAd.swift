@@ -162,7 +162,7 @@ final class SwiftyAd: NSObject {
     func showBannerfromView(aView: UIView) {
         guard !isRemoved else { return }
         bannerPosition = .top
-        loadBannerAdforView(aView: aView)
+        loadBannerAdforView(aView)
     }
     
     // MARK: - Show Interstitial
@@ -179,9 +179,26 @@ final class SwiftyAd: NSObject {
             guard intervalCounter >= interval else { return }
             intervalCounter = 0
         }
-    
+        
         print("AdMob interstitial is showing")
         interstitialAd?.present(fromRootViewController: viewController)
+    }
+    
+    func showInterstitialFromTopView(withInterval interval: Int? = nil) {
+        guard !isRemoved, isInterstitialReady else { return }
+        
+        if let interval = interval {
+            intervalCounter += 1
+            guard intervalCounter >= interval else { return }
+            intervalCounter = 0
+        }
+        
+        print("AdMob interstitial is showing")
+        
+        if let topVC = getTopVC() {
+            interstitialAd?.present(fromRootViewController: topVC)
+        }
+        
     }
     
     // MARK: - Show Reward Video
@@ -227,7 +244,7 @@ final class SwiftyAd: NSObject {
 private extension SwiftyAd {
     
     /// Load banner ad for View ameen
-    func loadBannerAdforView(aView: UIView) {
+    func loadBannerAdforView(_ aView: UIView) {
         print("AdMob banner ad loading...")
         
         bannerViewAd?.removeFromSuperview()
@@ -248,6 +265,24 @@ private extension SwiftyAd {
         #endif
         bannerViewAd.load(request)
     }
+    
+    /// Load interstitial ad
+    func loadInterstitialAd() {
+        print("AdMob interstitial ad loading...")
+        
+        interstitialAd = GADInterstitial(adUnitID: interstitialAdUnitID)
+        
+        guard let interstitialAd = interstitialAd else { return }
+        
+        interstitialAd.delegate = self
+        
+        let request = GADRequest()
+        #if DEBUG
+            request.testDevices = [kGADSimulatorID]
+        #endif
+        interstitialAd.load(request)
+    }
+
     
     /// Load banner ad
     func loadBannerAd(from viewController: UIViewController) {
@@ -273,22 +308,6 @@ private extension SwiftyAd {
         bannerViewAd.load(request)
     }
 
-    /// Load interstitial ad
-    func loadInterstitialAd() {
-        print("AdMob interstitial ad loading...")
-        
-        interstitialAd = GADInterstitial(adUnitID: interstitialAdUnitID)
-        
-        guard let interstitialAd = interstitialAd else { return }
-        
-        interstitialAd.delegate = self
-        
-        let request = GADRequest()
-        #if DEBUG
-            request.testDevices = [kGADSimulatorID]
-        #endif
-        interstitialAd.load(request)
-    }
     
     /// Load rewarded video ad
     func loadRewardedVideoAd() {
@@ -490,6 +509,17 @@ private extension SwiftyAd {
         }
         return nil
     }
+    func getTopVC() -> UIViewController?{
+        if var topController = UIApplication.shared.keyWindow?.rootViewController {
+            while let presentedViewController = topController.presentedViewController {
+                topController = presentedViewController
+            }
+            return topController
+        }else {
+            return nil
+        }
+    }
+
 }
 
 // MARK: - Alert
