@@ -159,6 +159,12 @@ final class SwiftyAd: NSObject {
         loadBannerAd(from: viewController)
     }
     
+    func showBannerfromView(aView: UIView) {
+        guard !isRemoved else { return }
+        bannerPosition = .top
+        loadBannerAdforView(aView: aView)
+    }
+    
     // MARK: - Show Interstitial
     
     /// Show interstitial ad randomly
@@ -220,15 +226,38 @@ final class SwiftyAd: NSObject {
 
 private extension SwiftyAd {
     
-    /// Load banner ad
-    func loadBannerAd(from viewController: UIViewController) {
+    /// Load banner ad for View ameen
+    func loadBannerAdforView(aView: UIView) {
         print("AdMob banner ad loading...")
-    
+        
         bannerViewAd?.removeFromSuperview()
         bannerViewAd = GADBannerView(adSize: bannerSize)
         
         guard let bannerViewAd = bannerViewAd else { return }
-       
+        
+        bannerViewAd.adUnitID = bannerViewAdUnitID
+        bannerViewAd.delegate = self
+        bannerViewAd.rootViewController = getParentVC(of: aView)
+        bannerViewAd.isHidden = true
+        bannerViewAd.center = CGPoint(x: aView.frame.midX, y: aView.frame.minY - (bannerViewAd.frame.height / 2))
+        aView.addSubview(bannerViewAd)
+        
+        let request = GADRequest()
+        #if DEBUG
+            request.testDevices = [kGADSimulatorID]
+        #endif
+        bannerViewAd.load(request)
+    }
+    
+    /// Load banner ad
+    func loadBannerAd(from viewController: UIViewController) {
+        print("AdMob banner ad loading...")
+        
+        bannerViewAd?.removeFromSuperview()
+        bannerViewAd = GADBannerView(adSize: bannerSize)
+        
+        guard let bannerViewAd = bannerViewAd else { return }
+        
         bannerViewAd.adUnitID = bannerViewAdUnitID
         bannerViewAd.delegate = self
         bannerViewAd.rootViewController = viewController
@@ -448,6 +477,18 @@ private extension SwiftyAd {
         case .top:
             bannerAd.center = CGPoint(x: viewController.view.frame.midX, y: viewController.view.frame.minY - (bannerAd.frame.height / 2))
         }
+    }
+    
+    //ameen
+    func getParentVC(of theView:UIView) -> UIViewController? {
+        var parentResponder: UIResponder? = theView
+        while parentResponder != nil {
+            parentResponder = parentResponder!.next
+            if let viewController = parentResponder as? UIViewController {
+                return viewController
+            }
+        }
+        return nil
     }
 }
 
